@@ -1,8 +1,5 @@
 const mysql = require('mysql');
 
-// Secret key for JWT
-const secretKey = 'akhaliaSchool';
-
 // Database connection
 const db = mysql.createConnection({
     host: 'localhost',
@@ -13,7 +10,6 @@ const db = mysql.createConnection({
 
 
 
-module.exports = {
-    secretKey, 
+module.exports = {     
     db
 }

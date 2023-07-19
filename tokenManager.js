@@ -1,3 +1,9 @@
+
+const jwt = require('jsonwebtoken')
+
+// Secret key for JWT
+const secretKey = 'akhaliaSchool';
+
 // Middleware for token validation
 function authenticateToken(req, res, next) {
     const token = req.header('Authorization');
@@ -16,5 +22,6 @@ function authenticateToken(req, res, next) {
   }
 
   module.exports = {
-    authenticateToken
+    authenticateToken, 
+    secretKey
   }

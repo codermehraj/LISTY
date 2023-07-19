@@ -15,9 +15,9 @@ const port = 3000;
 app.use(bodyParser.json());
 app.use(cors()); // for access control alow origin
 
-const { secretKey, db } = require('./database')
+const { db } = require('./database')
 
-const { authenticateToken } = require('./tokenManager')
+const { authenticateToken, secretKey } = require('./tokenManager')
 
 app.post('/login', (req, res) => {
 
@@ -97,7 +97,20 @@ app.get('/users', (req, res) => {
     });
 });
 
-
+app.post('/newList', authenticateToken, (req, res) => {
+    const { id, name, username } = req.body;
+  
+    // SQL query to insert a new user into the database
+    const sql = 'INSERT INTO notes VALUES (?, ?, ?)';
+    db.query(sql, [id, name, username], (err, result) => {
+      if (err) {
+        return res.status(500).json({ message: 'Database error.', msg: err });
+      }
+  
+      const successMsg = { message: "added list", listName: name };
+      res.status(201).json(successMsg);
+    });
+  });
 
 // Start the server
 app.listen(port, () => {
