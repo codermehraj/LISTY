@@ -11,14 +11,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors()); // for access control alow origin
 
-// Secret key for JWT
-const secretKey = 'akhaliaSchool';
+const {secretKey, db} = require('./database')
 
-// Database connection
-const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'codermehraj',
-    password: 'Helloworld1?',
-    database: 'TO_DO_APP_LOCAL',
-});
+const {authenticateToken} = require('./tokenManager')
 
