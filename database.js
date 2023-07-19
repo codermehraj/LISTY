@@ -1,3 +1,5 @@
+const mysql = require('mysql');
+
 // Secret key for JWT
 const secretKey = 'akhaliaSchool';
 
