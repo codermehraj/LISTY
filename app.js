@@ -1,7 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
-//const mysql = require('mysql');
 const cors = require('cors');
 
 // Create an instance of Express
@@ -10,14 +9,12 @@ const app = express();
 // port of server
 const port = 3000;
 
-
 // Use body-parser middleware to parse request bodies
 app.use(bodyParser.json());
 app.use(cors()); // for access control alow origin
 
-const { db } = require('./database')
-
-const { authenticateToken, secretKey } = require('./tokenManager')
+const { db } = require('./utility/database')
+const { authenticateToken, secretKey } = require('./utility/tokenManager')
 
 app.post('/login', (req, res) => {
 
