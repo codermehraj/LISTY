@@ -89,28 +89,93 @@ app.get('/users', (req, res) => {
 
     const sql = 'SELECT username FROM users';
     db.query(sql, (err, results) => {
-      if (err) {
-        return res.status(500).json({ message: 'Database error.' });
-      }
-  
-      res.json(results);
+        if (err) {
+            return res.status(500).json({ message: 'Database error.' });
+        }
+
+        res.json(results);
     });
 });
 
 app.post('/newList', authenticateToken, (req, res) => {
     const { id, name, username } = req.body;
-  
+
     // SQL query to insert a new user into the database
     const sql = 'INSERT INTO notes VALUES (?, ?, ?)';
     db.query(sql, [id, name, username], (err, result) => {
-      if (err) {
-        return res.status(500).json({ message: 'Database error.', msg: err });
-      }
-  
-      const successMsg = { message: "added list", listName: name };
-      res.status(201).json(successMsg);
+        if (err) {
+            return res.status(500).json({ message: 'Database error.', msg: err });
+        }
+
+        const successMsg = { message: "added list", listName: name };
+        res.status(201).json(successMsg);
     });
-  });
+});
+
+app.post('/newListElement', authenticateToken, (req, res) => {
+    const { id, nid, name, complete } = req.body;
+
+    // SQL query to insert a new user into the database
+    const sql = 'INSERT INTO tasks VALUES (?, ?, ?, ?)';
+    db.query(sql, [id, nid, name, complete], (err, result) => {
+        if (err) {
+            return res.status(500).json({ message: 'Database error.', msg: err });
+        }
+
+        const successMsg = { message: "added list item", listItemName: name };
+        res.status(201).json(successMsg);
+    });
+});
+
+app.post('/updateTaskElement', authenticateToken, (req, res) => {
+    const { id, nid, name, complete } = req.body;
+
+    // SQL query to insert a new user into the database
+    const sql = 'UPDATE tasks SET name = ?, complete = ? WHERE id = ?';
+    db.query(sql, [name, complete, id], (err, result) => {
+        if (err) {
+            return res.status(500).json({ message: 'Database error.', msg: err });
+        }
+
+        const successMsg = { message: "updated list item" + result, listItemName: name };
+        res.status(201).json(successMsg);
+    });
+});
+
+app.post('/deleteCompletedFromList', authenticateToken, (req, res) => {
+    const { nid } = req.body;
+
+    // SQL query to insert a new user into the database
+    const sql = 'DELETE FROM tasks WHERE nid = ? AND complete = 1';
+    db.query(sql, [nid], (err, result) => {
+        if (err) {
+            return res.status(500).json({ message: 'Database error.', msg: err });
+        }
+
+        const successMsg = { message: "deleted completed list item" + result, listId: nid };
+        res.status(201).json(successMsg);
+    });
+});
+
+app.post('/deleteList', authenticateToken, (req, res) => {
+    const { id } = req.body;
+
+    // SQL query to insert a new user into the database
+    const sql = 'DELETE FROM tasks WHERE nid = ?;';
+    const sql2 = 'DELETE FROM notes WHERE id = ?;';
+    db.query(sql, [id], (err, result) => {
+        if (err) {
+            return res.status(500).json({ message: 'Database error.', msg: err });
+        }
+        db.query(sql2, [id], (err, result) => {
+            if (err) {
+                return res.status(500).json({ message: 'Database error.', msg: err });
+            }
+        })
+        const successMsg = { message: "deleted the list" + result, listId: id };
+        res.status(201).json(successMsg);
+    });
+});
 
 // Start the server
 app.listen(port, () => {
