@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Todo list</title>
+    <link
+      href="https://fonts.googleapis.com/css?family=Work+Sans:300,400,700,900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./signup.css" />
+    <script defer src="./signup.js"></script>
+  </head>
+
+  <body>
+    
+    <h1 class="title">LISTY</h1>    
+
+    <div class="all-tasks">
+      <h2 class="task-list-title">Welcome to
+        <br> LISTY
+      </h2>
+      <b>log in </b> or <b>sign up</b> <br>
+      to start using.....
+      
+    </div>
+
+    <div class="todo-list" data-list-display-container>
+      <div class="todo-header">
+        <h2 class="list-title" data-list-title>SIGN UP</h2> 
+      </div>
+
+      <div class="todo-body">
+        <div class="tasks" data-tasks></div>
+
+        <div class="new-task-creator">
+            <form action="" data-new-task-form>
+                <input 
+                  type="text"
+                  id = "signup-username"
+                  data-new-task-input
+                  class="new task"
+                  placeholder="username"
+                  aria-label="username"
+                />                
+              </form>
+        </div>
+        <div class="new-task-creator">
+            <form action="" id = "signup-form" data-new-task-form>
+                <input 
+                  type="password"
+                  id = "signup-password"
+                  data-new-task-input
+                  class="new task"
+                  placeholder="password"
+                  aria-label="password"
+                />                
+              </form>
+        </div>
+        
+              
+        <button class="auth-signup-submit" auth-signup-submit> <b>SUBMIT</b> </button>
+        
+
+        <div class="delete-stuff">
+          <button class="btn delete" data-clear-complete-tasks-button>Already a member? <b>Sign In</b></button>
+          <button class="btn delete" data-delete-list-button>Forget password</button>
+        </div>
+      </div>
+    </div>
+
+   
+    </div>
+    <template id="task-template">
+      <div class="task">
+        <input type="checkbox" />
+        <label>
+          <span class="custom-checkbox"></span>
+        </label>
+      </div>
+    </template>
+  </body>
+</html>
