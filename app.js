@@ -11,8 +11,11 @@ const port = 3000;
 
 // Use body-parser middleware to parse request bodies
 app.use(bodyParser.json());
-app.use(cors()); // for access control alow origin
 
+// for access control alow origin
+app.use(cors());
+
+// importing database and jwt functions
 const { db } = require('./utility/database')
 const { authenticateToken, secretKey } = require('./utility/tokenManager')
 
@@ -24,9 +27,11 @@ app.post('/login', (req, res) => {
 
     const { username, password } = req.body;
 
-    // SQL query to validate user credentials
+    // checks the validity of the user credential
     const sql = 'SELECT * FROM users WHERE username = ? AND password = ?';
+
     db.query(sql, [username, password], (err, results) => {
+
         if (err) {
             return res.status(500).json({ message: 'Database error.', error: err });
         }
@@ -35,11 +40,11 @@ app.post('/login', (req, res) => {
             return res.status(401).json({ message: 'Invalid credentials.' });
         }
 
+        // generate jwt token
         const user = { username: username, role: 'admin' };
-
         const token = jwt.sign(user, secretKey, { expiresIn: '1h' });
-
         res.json({ token: token });
+
     });
 });
 
@@ -51,8 +56,8 @@ app.post('/signup', (req, res) => {
 
     const { username, password } = req.body;
 
-    if(username.length === 0 || password.length === 0) {
-        return res.status(400).json({message: 'Invalid username or password'});
+    if (username.length === 0 || password.length === 0) {
+        return res.status(400).json({ message: 'Invalid username or password' });
     }
 
     // Check if the username already exists in the database
@@ -82,6 +87,8 @@ app.post('/signup', (req, res) => {
     });
 });
 
+
+// unneccesary api route ~ for checking purposes no token needed ~ public
 app.get('/users', (req, res) => {
 
     // SQL query to fetch all usernames from the database table
@@ -116,7 +123,7 @@ app.post('/newList', authenticateToken, (req, res) => {
 app.post('/newListElement', authenticateToken, (req, res) => {
     const { id, nid, name, complete } = req.body;
 
-    // SQL query to insert a new user into the database
+    // SQL query to insert a new list title into the database
     const sql = 'INSERT INTO tasks VALUES (?, ?, ?, ?)';
     db.query(sql, [id, nid, name, complete], (err, result) => {
         if (err) {
@@ -131,7 +138,7 @@ app.post('/newListElement', authenticateToken, (req, res) => {
 app.post('/updateTaskElement', authenticateToken, (req, res) => {
     const { id, nid, name, complete } = req.body;
 
-    // SQL query to insert a new user into the database
+    // SQL query to update a task into the database
     const sql = 'UPDATE tasks SET name = ?, complete = ? WHERE id = ?';
     db.query(sql, [name, complete, id], (err, result) => {
         if (err) {
@@ -146,7 +153,7 @@ app.post('/updateTaskElement', authenticateToken, (req, res) => {
 app.post('/deleteCompletedFromList', authenticateToken, (req, res) => {
     const { nid } = req.body;
 
-    // SQL query to insert a new user into the database
+    // SQL query to delete completed task elements from the database
     const sql = 'DELETE FROM tasks WHERE nid = ? AND complete = 1';
     db.query(sql, [nid], (err, result) => {
         if (err) {
@@ -161,7 +168,7 @@ app.post('/deleteCompletedFromList', authenticateToken, (req, res) => {
 app.post('/deleteList', authenticateToken, (req, res) => {
     const { id } = req.body;
 
-    // SQL query to insert a new user into the database
+    // SQL query to delete a list and its tasks 
     const sql = 'DELETE FROM tasks WHERE nid = ?;';
     const sql2 = 'DELETE FROM notes WHERE id = ?;';
     db.query(sql, [id], (err, result) => {
@@ -178,23 +185,12 @@ app.post('/deleteList', authenticateToken, (req, res) => {
     });
 });
 
-app.get('/users', authenticateToken, (req, res) => {
-    // SQL query to fetch all users from the database table
-    const sql = 'SELECT * FROM users';
-    db.query(sql, (err, results) => {
-        if (err) {
-            return res.status(500).json({ message: 'Database error.' });
-        }
-
-        res.json(results);
-    });
-});
-
-app.get('/users/:id', authenticateToken, (req, res) => {
+// unneccesary api route ~ for checking purposes no token needed ~ public
+app.get('/users/:id', (req, res) => {
     const id = parseInt(req.params.id);
 
-    // SQL query to fetch a user with the specified ID
-    const sql = 'SELECT * FROM users WHERE id = ?';
+    // SQL query to fetch a username with the specified ID
+    const sql = 'SELECT username FROM users WHERE id = ?';
     db.query(sql, [id], (err, results) => {
         if (err) {
             return res.status(500).json({ message: 'Database error.' });
@@ -210,47 +206,48 @@ app.get('/users/:id', authenticateToken, (req, res) => {
 
 app.get('/lists/:id', authenticateToken, (req, res) => {
     const id = req.params.id;
-  
+
+    // first select all lists of the user
     const sql = 'SELECT * FROM notes WHERE username = ?';
     db.query(sql, [id], (err, results) => {
-      if (err) {
-        return res.status(500).json({ message: 'Database error.', id: id });
-      }
-      var notesArray = JSON.parse(JSON.stringify(results));
-  
-      // Create an array to hold all the promises
-      const promiseArray = [];
-  
-      notesArray.forEach((element) => {
-        let sql2 = 'SELECT id, name, complete FROM tasks WHERE nid = ?';
-  
-        // Create a promise for each query
-        const promise = new Promise((resolve, reject) => {
-          db.query(sql2, [element.id], (err, results) => {
-            if (err) {
-              reject(err);
-            } else {
-              const tmp = JSON.parse(JSON.stringify(results));
-              element.tasks = tmp;
-              //console.log(element)
-              resolve();
-            }
-          });
+        if (err) {
+            return res.status(500).json({ message: 'Database error.', id: id });
+        }
+        var notesArray = JSON.parse(JSON.stringify(results));
+
+        // Create an array to hold all the promises
+        const promiseArray = [];
+
+        notesArray.forEach((element) => {
+            // then get all the task of the specified list
+            let sql2 = 'SELECT id, name, complete FROM tasks WHERE nid = ?';
+
+            // Create a promise for each query
+            const promise = new Promise((resolve, reject) => {
+                db.query(sql2, [element.id], (err, results) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        const tmp = JSON.parse(JSON.stringify(results));
+                        element.tasks = tmp;
+                        resolve();
+                    }
+                });
+            });
+
+            promiseArray.push(promise);
         });
-  
-        promiseArray.push(promise);
-      });
-  
-      // Wait for all the promises to resolve
-      Promise.all(promiseArray)
-        .then(() => {
-          res.json(notesArray);
-        })
-        .catch((error) => {
-          return res.status(500).json({ message: 'Database error.', error: error });
-        });
+
+        // Wait for all the promises to resolve
+        Promise.all(promiseArray)
+            .then(() => {
+                res.json(notesArray);
+            })
+            .catch((error) => {
+                return res.status(500).json({ message: 'Database error.', error: error });
+            });
     });
-  });
+});
 
 // Start the server
 app.listen(port, () => {
