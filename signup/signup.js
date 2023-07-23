@@ -33,7 +33,7 @@ tasksContainer.addEventListener('click', e => {
 })
 
 clearCompleteTasksButton.addEventListener('click', e => {
-    window.location.href = defaultPath + "/login.html";
+    window.location.href =  "../login/login.html";
   saveAndRender()
 })
 

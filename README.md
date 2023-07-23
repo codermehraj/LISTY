@@ -21,3 +21,5 @@ npm install cors
 It is not the most efficient database design out there. Still it works fine for me for now.
 
 ![Database Schema](/Extra/databaseSchema.png "Database Schema")
+
+Here nid in the tasks table means the note id or the parent id of a task.
