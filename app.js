@@ -51,6 +51,10 @@ app.post('/signup', (req, res) => {
 
     const { username, password } = req.body;
 
+    if(username.length === 0 || password.length === 0) {
+        return res.status(400).json({message: 'Invalid username or password'});
+    }
+
     // Check if the username already exists in the database
     const checkUserSql = 'SELECT * FROM users WHERE username = ?';
     db.query(checkUserSql, [username], (err, results) => {
