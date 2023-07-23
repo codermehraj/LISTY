@@ -75,7 +75,7 @@ function signup(){
       if(token) {
         console.log('token that you got : ',token);
         localStorage.setItem('token', token);
-        window.location.href = defaultPath + "/login.html";
+        window.location.href = "../login/login.html";
       }
       else {
         alert(data.message)

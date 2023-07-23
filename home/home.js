@@ -31,7 +31,7 @@ usernameTitleTop.innerHTML = username;
 logoutButton.addEventListener("click", e => {
   localStorage.setItem("token", "")
   localStorage.setItem("username", "")
-  window.location.href = defaultPath + "/login.html";
+  window.location.href = "../login/login.html";
 })
 
 listsContainer.addEventListener('click', e => {
@@ -215,11 +215,12 @@ function syncUserList(){
     .then(data => {
       lists = data;      
       //console.log(lists);
-      if(lists) selectedListId = lists[0].id; 
+      if(lists.length !== 0) selectedListId = lists[0].id;
+      else selectedListId = null;
       saveAndRender();
     })
     .catch(error => {
-      console.error('Error : ', error);
+      console.error('Error : '+ error);
       //alert(error)
     });
 }

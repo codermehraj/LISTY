@@ -174,6 +174,80 @@ app.post('/deleteList', authenticateToken, (req, res) => {
     });
 });
 
+app.get('/users', authenticateToken, (req, res) => {
+    // SQL query to fetch all users from the database table
+    const sql = 'SELECT * FROM users';
+    db.query(sql, (err, results) => {
+        if (err) {
+            return res.status(500).json({ message: 'Database error.' });
+        }
+
+        res.json(results);
+    });
+});
+
+app.get('/users/:id', authenticateToken, (req, res) => {
+    const id = parseInt(req.params.id);
+
+    // SQL query to fetch a user with the specified ID
+    const sql = 'SELECT * FROM users WHERE id = ?';
+    db.query(sql, [id], (err, results) => {
+        if (err) {
+            return res.status(500).json({ message: 'Database error.' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        res.json(results[0]);
+    });
+});
+
+app.get('/lists/:id', authenticateToken, (req, res) => {
+    const id = req.params.id;
+  
+    const sql = 'SELECT * FROM notes WHERE username = ?';
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        return res.status(500).json({ message: 'Database error.', id: id });
+      }
+      var notesArray = JSON.parse(JSON.stringify(results));
+  
+      // Create an array to hold all the promises
+      const promiseArray = [];
+  
+      notesArray.forEach((element) => {
+        let sql2 = 'SELECT id, name, complete FROM tasks WHERE nid = ?';
+  
+        // Create a promise for each query
+        const promise = new Promise((resolve, reject) => {
+          db.query(sql2, [element.id], (err, results) => {
+            if (err) {
+              reject(err);
+            } else {
+              const tmp = JSON.parse(JSON.stringify(results));
+              element.tasks = tmp;
+              //console.log(element)
+              resolve();
+            }
+          });
+        });
+  
+        promiseArray.push(promise);
+      });
+  
+      // Wait for all the promises to resolve
+      Promise.all(promiseArray)
+        .then(() => {
+          res.json(notesArray);
+        })
+        .catch((error) => {
+          return res.status(500).json({ message: 'Database error.', error: error });
+        });
+    });
+  });
+
 // Start the server
 app.listen(port, () => {
     console.log(`Server started on port ${port}`);
