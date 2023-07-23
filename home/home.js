@@ -1,3 +1,5 @@
+/// DOCUMENT QUERIES and VARIABLES -----------------------------------------------------------
+
 // containers
 const listsContainer = document.querySelector('[data-lists]')
 const listDisplayContainer = document.querySelector('[data-list-display-container]')
@@ -30,16 +32,49 @@ let username = localStorage.getItem("username")
 let token = localStorage.getItem('token')
 let lists = JSON.parse(localStorage.getItem(LOCAL_STORAGE_LIST_KEY)) || []
 
-initiate();
 
-logoutButton.addEventListener("click", logout);
-listsContainer.addEventListener('click', e => listSelector(e));
-tasksContainer.addEventListener('click', e => taskRadioToogler(e));
-clearCompleteTasksButton.addEventListener('click', e => clearCompletedTask(e));
-deleteListButton.addEventListener('click', e => deleteList(e));
 
-newListForm.addEventListener('submit', e => listTitleAdder(e))
-newTaskForm.addEventListener('submit', e => taskContentAdder(e))
+/// FUNCTIONALITIES ATTACHMENT ------------------------------------------------------------
+
+
+initiateUser();
+addListeners();
+
+
+// utility functions
+
+function initiateUser() {
+  console.log(username + "Has logged in using \n token : " + token);
+  syncUserList();
+  usernameTitleTop.innerHTML = username;
+}
+
+function logout() {
+  localStorage.setItem("token", "")
+  localStorage.setItem("username", "")
+  window.location.href = "../login/login.html";
+}
+
+function addListeners() {
+  logoutButton.addEventListener("click", logout);
+  listsContainer.addEventListener('click', e => listSelector(e));
+  tasksContainer.addEventListener('click', e => taskRadioToogler(e));
+  clearCompleteTasksButton.addEventListener('click', e => clearCompletedTask(e));
+  deleteListButton.addEventListener('click', e => deleteList(e));
+
+  newListForm.addEventListener('submit', e => listTitleAdder(e))
+  newTaskForm.addEventListener('submit', e => taskContentAdder(e))
+}
+
+function createList(name) {
+  return { id: Date.now().toString(), name: name, tasks: [] }
+}
+
+function createTask(name) {
+  return { id: Date.now().toString(), name: name, complete: false }
+}
+
+// Listener Helper functions
 
 function listSelector(e) {
   if (e.target.tagName.toLowerCase() === 'li') {
@@ -47,6 +82,7 @@ function listSelector(e) {
     saveAndRender()
   }
 }
+
 function taskRadioToogler(e) {
   if (e.target.tagName.toLowerCase() === 'input') {
     const selectedList = lists.find(list => list.id === selectedListId)
@@ -57,18 +93,21 @@ function taskRadioToogler(e) {
     renderTaskCount(selectedList)
   }
 }
+
 function clearCompletedTask(e) {
   const selectedList = lists.find(list => list.id === selectedListId)
   selectedList.tasks = selectedList.tasks.filter(task => !task.complete)
   clearCompletedTaskFromDatabase(selectedListId)
   saveAndRender()
 }
+
 function deleteList(e) {
   lists = lists.filter(list => list.id !== selectedListId)
   deleteListFromDatabase(selectedListId)
   selectedListId = null
   saveAndRender()
 }
+
 function listTitleAdder(e) {
   e.preventDefault()
   const listName = newListInput.value
@@ -79,6 +118,7 @@ function listTitleAdder(e) {
   lists.push(list)
   saveAndRender()
 }
+
 function taskContentAdder(e) {
   e.preventDefault()
   const taskName = newTaskInput.value
@@ -91,17 +131,9 @@ function taskContentAdder(e) {
   saveAndRender()
 }
 
-function initiate() {
-  console.log(username + "Has logged in using \n token : " + token);
-  syncUserList();
-  usernameTitleTop.innerHTML = username;
-}
-function logout() {
-  localStorage.setItem("token", "")
-  localStorage.setItem("username", "")
-  window.location.href = "../login/login.html";
-}
 
+
+// Backend call functions
 
 function syncUserList() {
   const listFetchURL = "http://localhost:3000/lists/" + username;
@@ -240,13 +272,7 @@ function addlistElementToDatabase(task, listID) {
 }
 
 
-function createList(name) {
-  return { id: Date.now().toString(), name: name, tasks: [] }
-}
-
-function createTask(name) {
-  return { id: Date.now().toString(), name: name, complete: false }
-}
+// Rendering and element control functions
 
 function saveAndRender() {
   save()
