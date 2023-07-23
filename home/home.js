@@ -1,83 +1,131 @@
-//const { response } = require("express")
-
+// containers
 const listsContainer = document.querySelector('[data-lists]')
-const newListForm = document.querySelector('[data-new-list-form]')
-const newListInput = document.querySelector('[data-new-list-input]')
-const deleteListButton = document.querySelector('[data-delete-list-button]')
 const listDisplayContainer = document.querySelector('[data-list-display-container]')
-const listTitleElement = document.querySelector('[data-list-title]')
-const listCountElement = document.querySelector('[data-list-count]')
 const tasksContainer = document.querySelector('[data-tasks]')
-const taskTemplate = document.getElementById('task-template')
+
+// Forms and Inputs
 const newTaskForm = document.querySelector('[data-new-task-form]')
 const newTaskInput = document.querySelector('[data-new-task-input]')
-const clearCompleteTasksButton = document.querySelector('[data-clear-complete-tasks-button]')
-const usernameTitleTop = document.getElementById('title-view-username')
-const logoutButton = document.getElementById('logout-button')
+const newListForm = document.querySelector('[data-new-list-form]')
+const newListInput = document.querySelector('[data-new-list-input]')
 
-const defaultPath = '/references/todo-list-collab/javascript-finished'
+// Title values
+const usernameTitleTop = document.getElementById('title-view-username')
+const listTitleElement = document.querySelector('[data-list-title]')
+const listCountElement = document.querySelector('[data-list-count]')
+
+// Buttons
+const logoutButton = document.getElementById('logout-button')
+const clearCompleteTasksButton = document.querySelector('[data-clear-complete-tasks-button]')
+const deleteListButton = document.querySelector('[data-delete-list-button]')
+
+// Templates
+const taskTemplate = document.getElementById('task-template')
+
+// Local Storage Files
 const LOCAL_STORAGE_LIST_KEY = 'task.lists'
 const LOCAL_STORAGE_SELECTED_LIST_ID_KEY = 'task.selectedListId'
-let lists = JSON.parse(localStorage.getItem(LOCAL_STORAGE_LIST_KEY)) || []
 let selectedListId = localStorage.getItem(LOCAL_STORAGE_SELECTED_LIST_ID_KEY)
 let username = localStorage.getItem("username")
 let token = localStorage.getItem('token')
+let lists = JSON.parse(localStorage.getItem(LOCAL_STORAGE_LIST_KEY)) || []
 
-console.log(username);
-console.log(token)
-syncUserList();
-usernameTitleTop.innerHTML = username;
+initiate();
 
-logoutButton.addEventListener("click", e => {
-  localStorage.setItem("token", "")
-  localStorage.setItem("username", "")
-  window.location.href = "../login/login.html";
-})
+logoutButton.addEventListener("click", logout);
+listsContainer.addEventListener('click', e => listSelector(e));
+tasksContainer.addEventListener('click', e => taskRadioToogler(e));
+clearCompleteTasksButton.addEventListener('click', e => clearCompletedTask(e));
+deleteListButton.addEventListener('click', e => deleteList(e));
 
-listsContainer.addEventListener('click', e => {
+newListForm.addEventListener('submit', e => listTitleAdder(e))
+newTaskForm.addEventListener('submit', e => taskContentAdder(e))
+
+function listSelector(e) {
   if (e.target.tagName.toLowerCase() === 'li') {
     selectedListId = e.target.dataset.listId
     saveAndRender()
   }
-})
-
-tasksContainer.addEventListener('click', e => {
+}
+function taskRadioToogler(e) {
   if (e.target.tagName.toLowerCase() === 'input') {
     const selectedList = lists.find(list => list.id === selectedListId)
     const selectedTask = selectedList.tasks.find(task => task.id === e.target.id)
     selectedTask.complete = e.target.checked
-    updateTaskElementAsComplete(selectedTask)    
+    updateDBTaskElementAsComplete(selectedTask)
     save()
     renderTaskCount(selectedList)
   }
-})
-
-clearCompleteTasksButton.addEventListener('click', e => {
+}
+function clearCompletedTask(e) {
   const selectedList = lists.find(list => list.id === selectedListId)
   selectedList.tasks = selectedList.tasks.filter(task => !task.complete)
   clearCompletedTaskFromDatabase(selectedListId)
   saveAndRender()
-})
-
-deleteListButton.addEventListener('click', e => {
+}
+function deleteList(e) {
   lists = lists.filter(list => list.id !== selectedListId)
   deleteListFromDatabase(selectedListId)
   selectedListId = null
   saveAndRender()
-})
-
-newListForm.addEventListener('submit', e => {
+}
+function listTitleAdder(e) {
   e.preventDefault()
   const listName = newListInput.value
   if (listName == null || listName === '') return
   const list = createList(listName)
-  newListInput.value = null  
+  newListInput.value = null
   addlistTodataBase(list)
   lists.push(list)
   saveAndRender()
-})
+}
+function taskContentAdder(e) {
+  e.preventDefault()
+  const taskName = newTaskInput.value
+  if (taskName == null || taskName === '') return
+  const task = createTask(taskName)
+  newTaskInput.value = null
+  const selectedList = lists.find(list => list.id === selectedListId)
+  addlistElementToDatabase(task, selectedListId)
+  selectedList.tasks.push(task)
+  saveAndRender()
+}
 
-function addlistTodataBase(list){
+function initiate() {
+  console.log(username + "Has logged in using \n token : " + token);
+  syncUserList();
+  usernameTitleTop.innerHTML = username;
+}
+function logout() {
+  localStorage.setItem("token", "")
+  localStorage.setItem("username", "")
+  window.location.href = "../login/login.html";
+}
+
+
+function syncUserList() {
+  const listFetchURL = "http://localhost:3000/lists/" + username;
+  fetch(listFetchURL, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token
+    },
+  }).then(response => response.json())
+    .then(data => {
+      lists = data;
+      //console.log(lists);
+      if (lists.length !== 0) selectedListId = lists[0].id;
+      else selectedListId = null;
+      saveAndRender();
+    })
+    .catch(error => {
+      console.error('Error : ' + error);
+      //alert(error)
+    });
+}
+
+function addlistTodataBase(list) {
   const listInfo = {
     id: list.id,
     name: list.name,
@@ -85,14 +133,14 @@ function addlistTodataBase(list){
   };
   fetch('http://localhost:3000/newList', {
     method: 'POST',
-    headers:{
+    headers: {
       'Content-Type': 'application/json',
       'Authorization': token
-    }, 
+    },
     body: JSON.stringify(listInfo)
   }).then(response => response.json())
-    .then(data => {      
-      console.log(data)    
+    .then(data => {
+      console.log(data)
     })
     .catch(error => {
       console.error('Error : ', error);
@@ -100,31 +148,19 @@ function addlistTodataBase(list){
     });
 }
 
-newTaskForm.addEventListener('submit', e => {
-  e.preventDefault()
-  const taskName = newTaskInput.value
-  if (taskName == null || taskName === '') return
-  const task = createTask(taskName)
-  newTaskInput.value = null
-  const selectedList = lists.find(list => list.id === selectedListId)  
-  addlistElementToDatabase(task, selectedListId)
-  selectedList.tasks.push(task)
-  saveAndRender()
-})
-
-function deleteListFromDatabase(id){
-  const listItemInfo = {    
-    id: id,    
+function deleteListFromDatabase(id) {
+  const listItemInfo = {
+    id: id,
   };
   fetch('http://localhost:3000/deleteList', {
     method: 'POST',
-    headers:{
+    headers: {
       'Content-Type': 'application/json',
       'Authorization': token
-    }, 
+    },
     body: JSON.stringify(listItemInfo)
   }).then(response => response.json())
-    .then(data => {      
+    .then(data => {
       console.log(data)
     })
     .catch(error => {
@@ -133,19 +169,19 @@ function deleteListFromDatabase(id){
     });
 }
 
-function clearCompletedTaskFromDatabase(nid){
-  const listItemInfo = {    
-    nid: nid,    
+function clearCompletedTaskFromDatabase(nid) {
+  const listItemInfo = {
+    nid: nid,
   };
   fetch('http://localhost:3000/deleteCompletedFromList', {
     method: 'POST',
-    headers:{
+    headers: {
       'Content-Type': 'application/json',
       'Authorization': token
-    }, 
+    },
     body: JSON.stringify(listItemInfo)
   }).then(response => response.json())
-    .then(data => {      
+    .then(data => {
       console.log(data)
     })
     .catch(error => {
@@ -154,7 +190,7 @@ function clearCompletedTaskFromDatabase(nid){
     });
 }
 
-function updateTaskElementAsComplete(task){
+function updateDBTaskElementAsComplete(task) {
   const listItemInfo = {
     id: task.id,
     nid: selectedListId,
@@ -163,13 +199,13 @@ function updateTaskElementAsComplete(task){
   };
   fetch('http://localhost:3000/updateTaskElement', {
     method: 'POST',
-    headers:{
+    headers: {
       'Content-Type': 'application/json',
       'Authorization': token
-    }, 
+    },
     body: JSON.stringify(listItemInfo)
   }).then(response => response.json())
-    .then(data => {      
+    .then(data => {
       console.log(data)
     })
     .catch(error => {
@@ -178,8 +214,8 @@ function updateTaskElementAsComplete(task){
     });
 }
 
-function addlistElementToDatabase(task, listID){
-  if(listID === null) return;
+function addlistElementToDatabase(task, listID) {
+  if (listID === null) return;
   const listItemInfo = {
     id: task.id,
     nid: listID,
@@ -188,13 +224,13 @@ function addlistElementToDatabase(task, listID){
   };
   fetch('http://localhost:3000/newListElement', {
     method: 'POST',
-    headers:{
+    headers: {
       'Content-Type': 'application/json',
       'Authorization': token
-    }, 
+    },
     body: JSON.stringify(listItemInfo)
   }).then(response => response.json())
-    .then(data => {      
+    .then(data => {
       console.log(data)
     })
     .catch(error => {
@@ -203,27 +239,6 @@ function addlistElementToDatabase(task, listID){
     });
 }
 
-function syncUserList(){  
-  const listFetchURL = "http://localhost:3000/lists/" + username;
-  fetch(listFetchURL, {
-    method: 'GET',
-    headers:{
-      'Content-Type': 'application/json',
-      'Authorization': token
-    }, 
-  }).then(response => response.json())
-    .then(data => {
-      lists = data;      
-      //console.log(lists);
-      if(lists.length !== 0) selectedListId = lists[0].id;
-      else selectedListId = null;
-      saveAndRender();
-    })
-    .catch(error => {
-      console.error('Error : '+ error);
-      //alert(error)
-    });
-}
 
 function createList(name) {
   return { id: Date.now().toString(), name: name, tasks: [] }
@@ -240,14 +255,13 @@ function saveAndRender() {
 
 function save() {
   localStorage.setItem(LOCAL_STORAGE_LIST_KEY, JSON.stringify(lists))
-  //console.log(JSON.stringify(lists))
   localStorage.setItem(LOCAL_STORAGE_SELECTED_LIST_ID_KEY, selectedListId)
 }
 
 function render() {
   clearElement(listsContainer)
   renderLists()
-  
+
   const selectedList = lists.find(list => list.id === selectedListId)
   console.log("selected = " + selectedList)
   if (selectedListId == null) {
