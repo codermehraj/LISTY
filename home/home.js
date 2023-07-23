@@ -23,6 +23,7 @@ const deleteListButton = document.querySelector('[data-delete-list-button]')
 
 // Templates
 const taskTemplate = document.getElementById('task-template')
+const apiURL = 'http://localhost:3000';
 
 // Local Storage Files
 const LOCAL_STORAGE_LIST_KEY = 'task.lists'
@@ -56,12 +57,15 @@ function logout() {
 }
 
 function addListeners() {
+
+  // button or container click listener
   logoutButton.addEventListener("click", logout);
   listsContainer.addEventListener('click', e => listSelector(e));
   tasksContainer.addEventListener('click', e => taskRadioToogler(e));
   clearCompleteTasksButton.addEventListener('click', e => clearCompletedTask(e));
   deleteListButton.addEventListener('click', e => deleteList(e));
 
+  // form data submit listener
   newListForm.addEventListener('submit', e => listTitleAdder(e))
   newTaskForm.addEventListener('submit', e => taskContentAdder(e))
 }
@@ -132,11 +136,10 @@ function taskContentAdder(e) {
 }
 
 
-
 // Backend call functions
 
 function syncUserList() {
-  const listFetchURL = "http://localhost:3000/lists/" + username;
+  const listFetchURL = apiURL + "/lists/" + username;
   fetch(listFetchURL, {
     method: 'GET',
     headers: {
@@ -146,14 +149,12 @@ function syncUserList() {
   }).then(response => response.json())
     .then(data => {
       lists = data;
-      //console.log(lists);
       if (lists.length !== 0) selectedListId = lists[0].id;
       else selectedListId = null;
       saveAndRender();
     })
     .catch(error => {
       console.error('Error : ' + error);
-      //alert(error)
     });
 }
 
@@ -163,7 +164,7 @@ function addlistTodataBase(list) {
     name: list.name,
     username: username
   };
-  fetch('http://localhost:3000/newList', {
+  fetch(apiURL + '/newList', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -184,7 +185,7 @@ function deleteListFromDatabase(id) {
   const listItemInfo = {
     id: id,
   };
-  fetch('http://localhost:3000/deleteList', {
+  fetch(apiURL + '/deleteList', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -205,7 +206,7 @@ function clearCompletedTaskFromDatabase(nid) {
   const listItemInfo = {
     nid: nid,
   };
-  fetch('http://localhost:3000/deleteCompletedFromList', {
+  fetch(apiURL + '/deleteCompletedFromList', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -229,7 +230,7 @@ function updateDBTaskElementAsComplete(task) {
     name: task.name,
     complete: task.complete
   };
-  fetch('http://localhost:3000/updateTaskElement', {
+  fetch(apiURL + '/updateTaskElement', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -254,7 +255,7 @@ function addlistElementToDatabase(task, listID) {
     name: task.name,
     complete: task.complete
   };
-  fetch('http://localhost:3000/newListElement', {
+  fetch(apiURL + '/newListElement', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -289,7 +290,6 @@ function render() {
   renderLists()
 
   const selectedList = lists.find(list => list.id === selectedListId)
-  console.log("selected = " + selectedList)
   if (selectedListId == null) {
     listDisplayContainer.style.display = 'none'
     listTitleElement.innerText = "no title selected"
