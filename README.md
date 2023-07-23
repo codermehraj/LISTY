@@ -23,3 +23,11 @@ It is not the most efficient database design out there. Still it works fine for 
 ![Database Schema](/Extra/databaseSchema.png "Database Schema")
 
 Here nid in the tasks table means the note id or the parent id of a task.
+
+# Home page of LISTY
+
+![Database Schema](/Extra/app%20home%20page%20demo.png "Database Schema")
+
+# Login / Signup page
+
+![Database Schema](/Extra/loginPage.png "Database Schema")
