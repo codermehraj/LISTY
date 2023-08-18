@@ -1,6 +1,6 @@
 # LISTY
 
-LISTY is a simple and user friendly To-Do-App created using:
+LISTY is a simple and user-friendly To-Do-App created using:
 - HTML
 - CSS
 - JS
@@ -17,8 +17,11 @@ npm install mysql
 npm install cors
 ```
 
+# Video Demonstration
+[You Tube video link](https://youtu.be/z1GieneFf8s)
+
 # Database Design
-It is not the most efficient database design out there. Still it works fine for me for now.
+It is not the most efficient database design out there. Still, it works fine for me for now.
 
 ![Database Schema](/Extra/databaseSchema.png "Database Schema")
 
